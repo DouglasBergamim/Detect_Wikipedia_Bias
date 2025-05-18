@@ -30,15 +30,21 @@ class WikiService:
         r = requests.get(self.WIKI_API, params=params)
         return [i["title"] for i in r.json().get("query", {}).get("search", [])]
 
-    def get_relevant_titles(self, topics, max_candidates=500):
+    def get_relevant_titles(self, topics, target_count=20):
         """Obtém títulos relevantes para uma lista de tópicos"""
         titles = []
+        titles_per_topic = max(5, target_count // len(topics))  # Distribuir equitativamente
+        
         for t in topics:
-            for title in self.search_titles(t):
+            for title in self.search_titles(t, limit=titles_per_topic * 2):  # Buscar o dobro para ter margem
                 if title not in titles:
                     titles.append(title)
-                if len(titles) >= max_candidates:
-                    return titles
+                if len(titles) >= target_count * 2:  # Ter o dobro para filtrar com views
+                    break
+            
+            if len(titles) >= target_count * 2:
+                break
+                
         return titles
     
     async def fetch_views(self, session, title, date_dt):
@@ -88,7 +94,7 @@ class WikiService:
         except Exception:
             return None
             
-    async def get_trending_articles(self, topics, max_candidates=500, top_k=10, date_str=None):
+    async def get_trending_articles(self, topics, top_k=10, date_str=None):
         """Função principal para obter artigos relevantes e populares"""
         # Define data alvo
         if date_str:
@@ -99,8 +105,8 @@ class WikiService:
         else:
             date_dt = datetime.utcnow().date() - timedelta(days=1)
             
-        # Busca títulos relevantes
-        relevant_titles = self.get_relevant_titles(topics, max_candidates)
+        # Busca títulos relevantes (buscamos o dobro para depois filtrar por views)
+        relevant_titles = self.get_relevant_titles(topics, target_count=top_k)
         
         # Busca views
         async with aiohttp.ClientSession() as session:

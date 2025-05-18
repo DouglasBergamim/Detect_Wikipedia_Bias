@@ -1,0 +1,24 @@
+[server]
+# Diminuir o tamanho máximo do payload de mensagens para melhorar a performance
+maxMessageSize = 50
+runOnSave = false
+# Tornar o Streamlit mais rápido desligando alguns recursos avançados
+enableCORS = false
+enableXsrfProtection = false
+
+[theme]
+# Tema personalizado para a aplicação
+primaryColor = "#FF4B4B"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F0F2F6"
+textColor = "#262730"
+font = "sans serif"
+
+[browser]
+# Melhorar performance do navegador
+gatherUsageStats = false
+
+[runner]
+# Configurações do runner para melhorar estabilidade
+fastReruns = false
+magicEnabled = false 
