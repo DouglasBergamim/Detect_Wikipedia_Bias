@@ -1,0 +1,39 @@
+# Ambiente virtual
+.venv/
+venv/
+ENV/
+
+# Cache de modelos e dados
+models/*
+!models/.gitkeep
+
+# Arquivos de cache de Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Logs e arquivos temporários
+*.log
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Ambiente de desenvolvimento
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Dependências e pacotes
+node_modules/
+dist/
+build/ 
