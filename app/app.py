@@ -364,6 +364,5 @@ print("13. Adicionando rodapé")
 
 # Rodapé com créditos
 st.divider()
-st.markdown("**Nuvia** - Desenvolvido com Streamlit ❤️")
 
 print("14. Aplicação carregada completamente!") 

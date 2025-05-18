@@ -36,4 +36,4 @@ htmlcov/
 # Dependências e pacotes
 node_modules/
 dist/
-build/ 
+build/ .env
