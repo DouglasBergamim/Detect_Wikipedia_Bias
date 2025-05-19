@@ -2,17 +2,18 @@
 """
 Script para baixar previamente o modelo BERT usado na aplicação.
 Execute antes de iniciar a aplicação para melhorar o tempo de carregamento inicial:
-   python download_model.py
+   python app/download_model.py
 """
 import os
 import nltk
 from transformers import AutoTokenizer, TFAutoModelForSequenceClassification
+from app import config
 
 def main():
     print("Baixando e configurando recursos...")
     
     # Define o diretório de cache
-    cache_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "models")
+    cache_dir = config.MODELS_DIR
     os.makedirs(cache_dir, exist_ok=True)
     
     # Download dos recursos NLTK
@@ -22,7 +23,7 @@ def main():
     
     # Download do modelo BERT
     print("Baixando modelo BERT (isso pode levar alguns minutos)...")
-    model_name = "cffl/bert-base-styleclassification-subjective-neutral"
+    model_name = config.BIAS_MODEL_NAME
     
     # Baixar o tokenizer
     print("Baixando tokenizer...")

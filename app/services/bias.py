@@ -1,13 +1,17 @@
+"""
+Serviço para detecção de viés em textos usando modelo BERT
+"""
 import nltk
 import pandas as pd
 import os
 from transformers import AutoTokenizer, TFAutoModelForSequenceClassification, pipeline
 from nltk.tokenize import sent_tokenize
+from app import config
 
 class BiasDetector:
     def __init__(self):
         # Define o diretório de cache para os modelos
-        cache_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "models")
+        cache_dir = config.MODELS_DIR
         os.makedirs(cache_dir, exist_ok=True)
         
         # Certifique-se de que os recursos NLTK estão baixados
@@ -18,7 +22,7 @@ class BiasDetector:
             nltk.data.path.append(cache_dir)
             
         # Carrega o modelo pré-treinado com cache local
-        self.model_name = "cffl/bert-base-styleclassification-subjective-neutral"
+        self.model_name = config.BIAS_MODEL_NAME
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_name, cache_dir=cache_dir)
         self.model = TFAutoModelForSequenceClassification.from_pretrained(
             self.model_name, 

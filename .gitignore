@@ -11,9 +11,24 @@ models/*
 __pycache__/
 *.py[cod]
 *$py.class
-.pytest_cache/
-.coverage
-htmlcov/
+*.so
+.Python
+env/
+.env
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
 
 # Notebooks
 .ipynb_checkpoints/
@@ -35,5 +50,7 @@ htmlcov/
 
 # Dependências e pacotes
 node_modules/
-dist/
-build/ .env
+
+# Local files
+app_log.txt
+.streamlit/
