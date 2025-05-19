@@ -1,4 +1,4 @@
-# Nuvia - Wikipedia Article Analysis
+# Detect Wikipedia Bias
 
 Web application for analyzing Wikipedia articles, including bias detection using NLP techniques and argument analysis.
 
@@ -34,8 +34,8 @@ app/
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/your-user/nuvia.git
-cd nuvia
+git clone https://github.com/your-user/detect_wikipedia_bias.git
+cd detect_wikipedia_bias
 ```
 
 2. Install dependencies:
@@ -56,7 +56,12 @@ python app/download_model.py
 ## Running the Application
 
 ```bash
-streamlit run app/main.py
+PYTHONPATH=/path/to/detect_wikipedia_bias streamlit run app/main.py
+```
+
+Example:
+```bash
+PYTHONPATH=/home/dods/matrix/nuvia streamlit run app/main.py
 ```
 
 ## Features
