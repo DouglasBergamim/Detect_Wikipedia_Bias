@@ -19,7 +19,7 @@ from app.utils.state import ss
 WIKI_LOGO_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static/images/wiki_logo.png")
 DEFAULT_IMAGE = "https://upload.wikimedia.org/wikipedia/commons/thumb/8/80/Wikipedia-logo-v2.svg/1200px-Wikipedia-logo-v2.svg.png"
 
-# CSS para cards com tamanho padronizado (sem efeito hover)
+# CSS para cards com tamanho padronizado
 CARD_CSS = f"""
 <style>
     .article-card {{
@@ -197,16 +197,34 @@ def article_grid(articles_df, per_page):
                             
                             try:
                                 # Analisar viés
-                                bias_df = registry.bias.analyze_text(content)
-                                bias_summary = registry.bias.get_summary(bias_df)
+                                structured_bias_df = registry.bias.analyze_text(content)
+                                bias_df = structured_bias_df.copy()  # Manter compatibilidade com código existente
+                                bias_summary = registry.bias.get_summary(structured_bias_df)
                                 
                                 # Iniciar análise assíncrona de argumentos faltantes
                                 import asyncio
                                 async def run_args_analysis():
                                     # Análise de argumentos faltantes (em paralelo)
-                                    missing_args = await registry.args_analyzer.analyze_article_missing_args(content)
-                                    missing_args_summary = await registry.args_analyzer.summarize_missing_args(missing_args)
-                                    return missing_args, missing_args_summary
+                                    try:
+                                        print("Iniciando análise de argumentos faltantes...")
+                                        missing_args = await registry.args_analyzer.analyze_article_missing_args(content)
+                                        print(f"Análise de argumentos concluída. Resultados: {bool(missing_args)}, tipo: {type(missing_args)}")
+                                        
+                                        if missing_args:
+                                            print(f"Seções encontradas com argumentos faltantes: {list(missing_args.keys())}")
+                                        else:
+                                            print("Nenhum argumento faltante encontrado.")
+                                            
+                                        missing_args_summary = await registry.args_analyzer.summarize_missing_args(missing_args)
+                                        print(f"Resumo de argumentos concluído. Resultados: {len(missing_args_summary)} itens")
+                                        
+                                        return missing_args, missing_args_summary
+                                    except Exception as e:
+                                        print(f"ERRO detalhado na análise de argumentos: {type(e).__name__} - {str(e)}")
+                                        # Tentar registrar mais detalhes da exceção
+                                        import traceback
+                                        traceback.print_exc()
+                                        return {}, []
                                 
                                 # Aplicar patch para asyncio funcionar com Streamlit
                                 import nest_asyncio
@@ -215,8 +233,10 @@ def article_grid(articles_df, per_page):
                                 # Executar análise assíncrona
                                 try:
                                     missing_args, missing_args_summary = asyncio.run(run_args_analysis())
+                                    print(f"Análise de argumentos completa. Dados: args={bool(missing_args)}, summary={len(missing_args_summary)}")
                                 except Exception as e:
                                     st.warning(f"Erro na análise de argumentos: {e}")
+                                    print(f"ERRO ao executar análise de argumentos: {e}")
                                     missing_args, missing_args_summary = {}, []
                                 
                                 # Armazenar resultados
@@ -224,10 +244,12 @@ def article_grid(articles_df, per_page):
                                 store_analysis_results(
                                     article=row,
                                     bias_df=bias_df,
+                                    structured_bias_df=structured_bias_df,
                                     bias_summary=bias_summary,
                                     missing_args=missing_args,
                                     missing_args_summary=missing_args_summary
                                 )
+                                print(f"Resultados armazenados no estado. missing_args={bool(missing_args)}, summary={len(missing_args_summary)}")
                                 
                                 # Rerun para mostrar o relatório
                                 st.rerun()

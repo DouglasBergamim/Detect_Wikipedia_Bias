@@ -6,35 +6,35 @@ import nest_asyncio
 import os
 import sys
 import pandas as pd
+from app.config import APP_TITLE, APP_ICON, APP_DESCRIPTION, DEFAULT_ARTICLES_PER_PAGE
 
-# Adicionar o diretório raiz ao sys.path para permitir importações absolutas
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-# Importações do projeto
+
 from app.ui import sidebar_controls, article_grid, show_bias_report
 from app.services import registry
 from app.utils.state import ss, _init_session_state
 
-# Garantir que o estado da sessão esteja inicializado
+
 _init_session_state()
 
-# Aplicando patch para asyncio funcionar com Streamlit
+
 nest_asyncio.apply()
 
-# Configuração da página
+# header
 st.set_page_config(
-    page_title="Nuvia · Wiki Bias",
-    page_icon="📚",
+    page_title=APP_TITLE,
+    page_icon=APP_ICON,
     layout="wide"
 )
 
-# Título principal
-st.title("📚 Nuvia – Wikipedia Bias Scanner")
+# title
+st.title(APP_TITLE)
 
-# 1. Sidebar -----------------------------------------------------------------
+#sidebar
 controls = sidebar_controls()
 
-# 2. Busca ao clicar ---------------------------------------------------------
+# search
 if controls["do_search"]:
     try:
         articles = registry.wiki.get_articles(**controls)
@@ -45,23 +45,22 @@ if controls["do_search"]:
         st.error(f"Erro ao buscar artigos: {e}")
         ss.articles_df = pd.DataFrame()
 
-# 3. Grid de artigos + paginação --------------------------------------------
+# articles grid
 try:
-    # Garantir que articles_df existe e é um DataFrame válido
     df = ss.articles_df
     if isinstance(df, pd.DataFrame) and not df.empty:
-        article_grid(df, controls.get("per_page", 6))
+        article_grid(df, controls.get("per_page", DEFAULT_ARTICLES_PER_PAGE))
     elif controls.get("do_search"):
         st.info("Nenhum artigo encontrado. Tente ajustar sua busca.")
 except Exception as e:
     st.error(f"Erro ao exibir artigos: {e}")
 
-# 4. Relatório de viés -------------------------------------------------------
+# bias report
 if ss.selected is not None:
     try:
         show_bias_report(ss.selected)
     except Exception as e:
         st.error(f"Erro ao exibir relatório de viés: {e}")
 
-# Rodapé com créditos
+# footer    
 st.divider() 

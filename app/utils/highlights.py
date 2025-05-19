@@ -1,28 +1,25 @@
-"""
-Utilitários para destacar trechos com viés em textos
-"""
 import re
 from .. import config
 
 def format_text_with_bias_highlights(text, bias_df):
     """
-    Formata o texto completo, destacando as frases subjetivas e formatando os títulos de seções.
+    Formats the complete text, highlighting subjective sentences and formatting section titles.
     
     Args:
-        text (str): O texto a ser formatado
-        bias_df (DataFrame): DataFrame com as sentenças analisadas
+        text (str): The text to be formatted
+        bias_df (DataFrame): DataFrame containing analyzed sentences
         
     Returns:
-        str: Texto formatado com HTML para destacar trechos enviesados
+        str: Text formatted with HTML to highlight biased passages
     """
     if bias_df is None or bias_df.empty:
         return format_section_titles(text)
     
-    # Primeiro, vamos formatar os títulos de seções
+    # First, let's format the section titles
     formatted_text = format_section_titles(text)
     
-    # Ordenar as sentenças por comprimento (decrescente) para evitar substituições erradas
-    # quando uma sentença é subconjunto de outra
+    # Sort sentences by length (descending) to avoid incorrect substitutions
+    # when one sentence is a subset of another
     sorted_sentences = bias_df.sort_values(by='sentence', key=lambda x: x.str.len(), ascending=False)
     
     for _, row in sorted_sentences.iterrows():
@@ -30,14 +27,14 @@ def format_text_with_bias_highlights(text, bias_df):
         label = row['label']
         
         if label == 'SUBJECTIVE':
-            # Verificar se a sentença não está vazia
+            # Check if the sentence is not empty
             if not sentence or len(sentence.strip()) < 5:
                 continue
                 
-            # Escapar caracteres especiais do regex
+            # Escape special regex characters
             sentence = sentence.strip()
             
-            # Substituir a sentença pela versão destacada usando regex que evita substituir em atributos HTML
+            # Replace the sentence with the highlighted version using regex that avoids replacing in HTML attributes
             if sentence in formatted_text:
                 pattern = re.compile(rf'(?<!["\w]){re.escape(sentence)}(?![\w"])')
                 formatted_text = pattern.sub(
@@ -48,35 +45,79 @@ def format_text_with_bias_highlights(text, bias_df):
     
     return formatted_text
 
+def format_text_with_selectable_bias(text, bias_df):
+    """
+    Formats the text to allow selection of biased passages using checkboxes.
+    
+    Args:
+        text (str): The text to be formatted
+        bias_df (DataFrame): DataFrame containing analyzed sentences
+        
+    Returns:
+        str: Text formatted with checkboxes to select biased passages
+    """
+    if bias_df is None or bias_df.empty:
+        return format_section_titles(text)
+    
+    # First, let's format the section titles
+    formatted_text = format_section_titles(text)
+    
+    # Filter only subjective sentences
+    subjective_sentences = bias_df[bias_df['label'] == 'SUBJECTIVE']
+    
+    # Sort sentences by length (descending) to avoid incorrect substitutions
+    sorted_sentences = subjective_sentences.sort_values(by='sentence', key=lambda x: x.str.len(), ascending=False)
+    
+    for i, (_, row) in enumerate(sorted_sentences.iterrows()):
+        sentence = row['sentence']
+        
+        # Check if the sentence is not empty
+        if not sentence or len(sentence.strip()) < 5:
+            continue
+            
+        # Escape special regex characters
+        sentence = sentence.strip()
+        
+        # Replace the sentence with the highlighted version with checkbox
+        if sentence in formatted_text:
+            pattern = re.compile(rf'(?<!["\w]){re.escape(sentence)}(?![\w"])')
+            formatted_text = pattern.sub(
+                f'<div style="{config.HIGHLIGHT_STYLE}"><input type="checkbox" id="check_{i}" name="check_{i}" value="{sentence}"> {sentence}</div>',
+                formatted_text,
+                count=1
+            )
+    
+    return formatted_text
+
 def format_section_titles(text):
     """
-    Transforma marcações =, ==, === em <h1>/<h2>/<h3> válidos
-    e converte blocos vazios em parágrafos. Garante que <p>
-    nunca abrace um <h*>.
+    Transforms =, ==, === markings into valid <h1>/<h2>/<h3>
+    and converts empty blocks into paragraphs. Ensures that <p>
+    never wraps a <h*>.
     """
-    # CSS para os títulos - será definido uma única vez no bias_report.py
+    # CSS for titles - will be defined once in bias_report.py
     css = ""
     
-    # 1. Substitui cabeçalhos, mantendo quebras de linha
+    # 1. Replace headers, maintaining line breaks
     tmp = text
     
-    # Remover qualquer string que pareça um "section-h" incorreto
+    # Remove any string that looks like an incorrect "section-h"
     tmp = re.sub(r'"section-h[123]">', '', tmp)
     
-    # Padrões de cabeçalho mais flexíveis que funcionam mesmo se não estiverem no início da linha
-    # Primeiro processamos h3 (===), depois h2 (==) e por fim h1 (=)
+    # More flexible header patterns that work even if not at the start of the line
+    # First process h3 (===), then h2 (==) and finally h1 (=)
     tmp = re.sub(r'===\s*([^=\n]+?)\s*===', r'\n<h3>\1</h3>\n', tmp)
     tmp = re.sub(r'==\s*([^=\n]+?)\s*==', r'\n<h2>\1</h2>\n', tmp)
     tmp = re.sub(r'=\s*([^=\n]+?)\s*=', r'\n<h1>\1</h1>\n', tmp)
 
-    # 2. Constrói parágrafos: para cada bloco separado por linha vazia
+    # 2. Build paragraphs: for each block separated by empty line
     html_parts = []
     for block in re.split(r'\n{2,}', tmp.strip()):
         block = block.strip()
-        # Se o bloco **já** é um cabeçalho (<h1|h2|h3>), não embrulhar
+        # If the block is **already** a header (<h1|h2|h3>), don't wrap it
         if re.match(r'^<h[1-3]>', block):
             html_parts.append(block)
         else:
             html_parts.append(f'<p>{block}</p>')
 
-    return f'<div class="section-content">\n' + "\n".join(html_parts) + "\n</div>" 
+    return f'<div class="section-content">\n' + "\n".join(html_parts) + "\n</div>"
